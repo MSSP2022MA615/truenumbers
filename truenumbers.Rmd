@@ -1,0 +1,185 @@
+---
+title: "truenumbers"
+author: "Hao He"
+date: "2022-10-21"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(sentimentr)
+```
+
+```{r echo = FALSE}
+library(tnum)
+tnum.loadLibs()
+tnum.authorize(ip="mssp.truenum.com:8080",creds = "haohe@bu.edu:marmoset")
+
+```
+# Book report without reading
+The strategy is to track the action and ideas in the book so you can used this maerial as raw material for a report.  You might conclude you report by posing the questions that the book poses. 
+```{r}
+# stringval
+tnum.query("stringval:The Time Traveller and stringval:Morlock") #1
+tnum.query("stringval:The Time Traveller") #57
+tnum.query("stringval:me and stringval: Weena") #27 results
+tnum.query("stringval:time travel and stringval:")
+
+# try chapters
+
+text_ch1 <- tnum.query("subj:Time_Machine:Chapter:1:*")
+text_ch2 <- tnum.query("subj:Time_Machine:Chapter:2:*")
+text_ch4 <- tnum.query("subj:Time_Machine:Chapter:4:*")
+text_ch5 <- tnum.query("subj:Time_Machine:Chapter:5:*")
+text_ch6 <- tnum.query("subj:Time_Machine:Chapter:6:*")
+text_ch7 <- tnum.query("subj:Time_Machine:Chapter:7:*")
+text_ch8 <- tnum.query("subj:Time_Machine:Chapter:8:*")
+text_ch10 <- tnum.query("subj:Time_Machine:Chapter:10:*")
+text_ch12 <- tnum.query("subj:Time_Machine:Chapter:12:*")
+
+ch8_weena <- tnum.query("subj:Time_Machine:Chapter:8:* and stringval:Weena")
+ch10_weena <- tnum.query("subj:Time_Machine:Chapter:10:* and stringval:Weena")
+ch11_weena <- tnum.query("subj:Time_Machine:Chapter:11:* and stringval:Weena")
+ch12_weena <- tnum.query("subj:Time_Machine:Chapter:12:* and stringval:Weena")
+ch13_weena <- tnum.query("subj:Time_Machine:Chapter:13:* and stringval:Weena")
+all_weena <- tnum.query("subj:Time_Machine:* and stringval:Weena") #53 
+kable(all_weena)
+
+tnum.query("subj:Time_Machine:Chapter:13:*")
+
+
+
+
+###############Tina's work
+
+time_weena <- tnum.query("stringval:weena")%>%
+  select(subject, value) %>%
+  separate(subject, sep=":",
+    into=c("book","chap","chap_no", "sent","sent_no")) %>%
+  select(chap_no, sent_no, value)
+   time_weena$chap_no <- as.numeric(time_weena$chap_no)
+   time_weena$sent_no <- as.numeric(time_weena$sent_no)
+time_weena %>% arrange(chap_no, sent_no)
+w <- tnum.query("stringval:weena*")
+
+time_wee_mor <- tnum.query("stringval:weena and stringval:morlock") %>%
+               select(subject, value) %>%
+               separate(subject, sep=":",
+      into=c("book","chap","chap_no", "sent","sent_no")) %>%
+               select(chap_no, sent_no, value)
+time_wee_mor$chap_no <- as.numeric(time_wee_mor$chap_no)
+time_wee_mor$sent_no <- as.numeric(time_wee_mor$sent_no)
+time_wee_mor %>% arrange(chap_no, sent_no) 
+
+
+
+# where me , weena, morlock mentioned
+me_weena_morlock<- tnum.query("stringval:weena and stringval:morlock and stringval:me") %>%
+               select(subject, value) %>%
+               separate(subject, sep=":",
+      into=c("book","chap","chap_no", "sent","sent_no")) %>%
+               select(chap_no, sent_no, value)
+me_weena_morlock$chap_no <- as.numeric(time_wee_mor$chap_no)
+me_weena_morlock$sent_no <- as.numeric(time_wee_mor$sent_no)
+table_me_weena_morlock<- me_weena_morlock%>% arrange(chap_no, sent_no) 
+
+# 
+weena_machine<- tnum.query("stringval:weena and stringval:time machine") %>%
+               select(subject, value) %>%
+               separate(subject, sep=":",
+      into=c("book","chap","chap_no", "sent","sent_no")) %>%
+               select(chap_no, sent_no, value)
+
+view(weena_machine)
+
+
+# morlock mentioned
+time_morlock <- tnum.query("stringval:morlock") %>%
+                select(subject, value) %>%
+                separate(subject, sep=":",
+    into=c("book","chap","chap_no", "sent","sent_no")) %>%
+     select(chap_no, sent_no, value)
+time_morlock$chap_no <- as.numeric(time_morlock$chap_no)
+time_morlock$sent_no <- as.numeric(time_morlock$sent_no)
+time_morlock %>% arrange(chap_no, sent_no)
+view(time_morlock %>% arrange(chap_no, sent_no))
+
+
+# narrator/Hillyer
+
+# sentiment analysis by chapters
+library(sentimentr)
+time_m_ch_8 <- tnum.query("Time_Machine:chapter:8:sentence:* has text") %>%
+  select(subject, value) %>%
+  separate(subject, sep=":",
+           into=c("book","chap","chap_no", "sent","chap8_sent_no")) %>%
+  select(chap8_sent_no, value)
+
+time_m_ch_8$chap8_sent_no <- as.numeric(time_m_ch_8$chap8_sent_no)
+time_m_ch_8 %>% arrange(chap8_sent_no)
+time_m_ch_8_pick_section <- time_m_ch_8 %>%
+  filter(90 < chap8_sent_no & chap8_sent_no < 130) %>%
+  select(value)
+time_m_ch_8_pick_section_sent <- time_m_ch_8_pick_section %>%
+  get_sentences() %>%
+  sentiment()
+time_m_ch_8_pick_section_sent %>%
+  ggplot() + geom_density(aes(sentiment))
+
+# 
+time_m_ch_12 <- tnum.query("Time_Machine:chapter:12:sentence:* has text") %>%
+  select(subject, value) %>%
+  separate(subject, sep=":",
+           into=c("book","chap","chap_no", "sent","chap12_sent_no")) %>%
+  select(chap12_sent_no, value)
+
+time_m_ch_2$chap12_sent_no <- as.numeric(time_m_ch_8$chap8_sent_no)
+time_m_ch_8 %>% arrange(chap8_sent_no)
+time_m_ch_8_pick_section <- time_m_ch_8 %>%
+  filter(90 < chap8_sent_no & chap8_sent_no < 130) %>%
+  select(value)
+time_m_ch_8_pick_section_sent <- time_m_ch_8_pick_section %>%
+  get_sentences() %>%
+  sentiment()
+time_m_ch_8_pick_section_sent %>%
+  ggplot() + geom_density(aes(sentiment))
+```
+
+# Demographics of New England counties
+Education, wealth, poverty, or correlations between variables in the dataset. 
+Discuss how you approached the data, what you found, what you wonder about what you found, and so on.
+```{r}
+# example
+x_nhi_mas <- tnum.query("subj:Massachusetts* and prop:population:no_health_insurance and numval:>20000")
+xmas <-  mapply(FUN = tnum.addTag,
+       guid = x_nhi_mas$id,
+       tag = "pop no_health_insurance",
+       text = "the population of no helath insurance in Massachusetts")
+tnum.getTagsOfTn(x_nhi_mas[1,]$id)
+kable(x_nhi_mas)
+
+tn1 <- tnum.postStatement(
+  stmt = "The largest number of Massachusetts at Middlesex that not having health insurance is 39401 ",
+  notes = "Our first truenumber"
+)
+
+# tnumgraphics
+
+
+
+
+tnum.query("subj:Massachusetts* and prop:population")
+
+tnum.getAllProperties()
+tmp <- tnum.query("prop:population")
+colnames(tmp)
+
+```
+
+```{r}
+tnum.query("prop:population and ")
+
+tnum.query("subj:")
+```
+
